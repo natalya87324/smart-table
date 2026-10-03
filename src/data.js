@@ -1,55 +1,54 @@
 const BASE_URL = 'https://webinars.webdev.education-services.ru/sp7-api';
 
 export function initData() {
-    // переменные для кеширования данных
-    let sellers;
-    let customers;
-    let lastResult;
-    let lastQuery;
-        
-    const mapRecords = (data) => data.map(item => ({
-        id: item.receipt_id,
-        date: item.date,
-        seller: sellers[item.seller_id],
-        customer: customers[item.customer_id],
-        total: item.total_amount
+  // переменные для кеширования данных
+  let sellers;
+  let customers;
+  let lastResult;
+  let lastQuery;
+
+  const mapRecords = (data) =>
+    data.map((item) => ({
+      id: item.receipt_id,
+      date: item.date,
+      seller: sellers[item.seller_id],
+      customer: customers[item.customer_id],
+      total: item.total_amount,
     }));
-    
-    const getIndexes = async () => {
 
-        if (!sellers || !customers) {
-            [sellers, customers] = await Promise.all([
-                fetch(`${BASE_URL}/sellers`).then(res => res.json()),
-                fetch(`${BASE_URL}/customers`).then(res => res.json()),
-            ]);
-        }
-
-        return { sellers, customers };
+  const getIndexes = async () => {
+    if (!sellers || !customers) {
+      [sellers, customers] = await Promise.all([
+        fetch(`${BASE_URL}/sellers`).then((res) => res.json()),
+        fetch(`${BASE_URL}/customers`).then((res) => res.json()),
+      ]);
     }
 
-    const getRecords = async (query, isUpdated = false) => {
-        const qs = new URLSearchParams(query);
-        const nextQuery = qs.toString();
+    return { sellers, customers };
+  };
 
-        if (lastQuery === nextQuery && !isUpdated) {
-            return lastResult;
-        }
+  const getRecords = async (query, isUpdated = false) => {
+    const qs = new URLSearchParams(query);
+    const nextQuery = qs.toString();
 
-        const response = await fetch(`${BASE_URL}/records?${nextQuery}`);
-        const records = await response.json();
+    if (lastQuery === nextQuery && !isUpdated) {
+      return lastResult;
+    }
 
-        lastQuery = nextQuery;
-        lastResult = {
-            total: records.total,
-            items: mapRecords(records.items)
-        };
+    const response = await fetch(`${BASE_URL}/records?${nextQuery}`);
+    const records = await response.json();
 
-
-        return lastResult;
+    lastQuery = nextQuery;
+    lastResult = {
+      total: records.total,
+      items: mapRecords(records.items),
     };
 
-    return {
-        getIndexes,
-        getRecords
-    }
+    return lastResult;
+  };
+
+  return {
+    getIndexes,
+    getRecords,
+  };
 }
